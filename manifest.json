@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Hail-O",
+  "version": "2.0",
+  "description": "Get real-time browser notifications for hail and severe weather warnings in your area across Australia",
+  "permissions": [
+    "notifications",
+    "storage",
+    "alarms",
+    "geolocation"
+  ],
+  "host_permissions": [
+    "http://www.bom.gov.au/*",
+    "https://www.bom.gov.au/*",
+    "http://*.bom.gov.au/*",
+    "https://*.bom.gov.au/*",
+    "https://nominatim.openstreetmap.org/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

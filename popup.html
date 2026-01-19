@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 380px;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: #ffffff;
+    }
+    
+    .header {
+      background: #4a5568;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid #2d3748;
+    }
+    
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    
+    .status {
+      padding: 14px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      border: 2px solid;
+    }
+    
+    .status.no-warning {
+      background: #edf2f7;
+      color: #2d3748;
+      border-color: #4a5568;
+    }
+    
+    .status.warning {
+      background: #fff5f5;
+      color: #c53030;
+      border-color: #fc8181;
+    }
+    
+    .status.checking {
+      background: #edf2f7;
+      color: #2d3748;
+      border-color: #cbd5e0;
+    }
+    
+    .warnings-container {
+      margin: 0 0 20px 0;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    
+    .warning-item {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .warning-item:hover {
+      border-color: #4a5568;
+      box-shadow: 0 2px 8px rgba(74, 85, 104, 0.15);
+    }
+    
+    .warning-item.severe {
+      border-left: 4px solid #c53030;
+      background: #fff5f5;
+    }
+    
+    .warning-item.high {
+      border-left: 4px solid #dd6b20;
+      background: #fffaf0;
+    }
+    
+    .warning-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .warning-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #2d3748;
+      flex: 1;
+      line-height: 1.4;
+    }
+    
+    .warning-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-left: 8px;
+      white-space: nowrap;
+      background: #4a5568;
+      color: white;
+    }
+    
+    .warning-badge.severe {
+      background: #c53030;
+    }
+    
+    .warning-badge.high {
+      background: #dd6b20;
+    }
+    
+    .warning-meta {
+      font-size: 11px;
+      color: #718096;
+      display: flex;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    
+    .warning-type {
+      font-weight: 500;
+      color: #4a5568;
+    }
+    
+    .section {
+      background: #f7fafc;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #2d3748;
+    }
+    
+    .location-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #4a5568;
+    }
+    
+    input[type="text"]::placeholder {
+      color: #a0aec0;
+    }
+    
+    button {
+      padding: 10px 16px;
+      background: #4a5568;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    button:hover {
+      background: #2d3748;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    button.secondary {
+      background: white;
+      color: #4a5568;
+      border: 2px solid #4a5568;
+    }
+    
+    button.secondary:hover {
+      background: #edf2f7;
+    }
+    
+    button.full-width {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .info {
+      font-size: 11px;
+      color: #718096;
+      margin-top: 12px;
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      line-height: 1.5;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .current-location {
+      font-size: 12px;
+      color: #2d3748;
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .footer {
+      padding: 12px 20px;
+      border-top: 2px solid #e2e8f0;
+      background: #f7fafc;
+      font-size: 11px;
+      color: #718096;
+      text-align: center;
+    }
+    
+    .message {
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      border: 2px solid;
+    }
+    
+    .message.success {
+      background: #f0fff4;
+      color: #22543d;
+      border-color: #9ae6b4;
+    }
+    
+    .message.error {
+      background: #fff5f5;
+      color: #742a2a;
+      border-color: #fc8181;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f7fafc;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Hail-O</h2>
+    <div class="subtitle">Australian Weather Alerts</div>
+  </div>
+  
+  <div class="content">
+    <div id="status" class="status checking">
+      Loading...
+    </div>
+    
+    <div id="notificationStatus" style="display: none; font-size: 11px; color: #718096; text-align: center; margin-bottom: 15px; padding: 8px; background: #f7fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+      Browser notifications enabled
+    </div>
+    
+    <div id="warningsContainer" class="warnings-container" style="display: none;">
+      <!-- Warnings will be displayed here -->
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Your Location</div>
+      
+      <div class="location-input-row">
+        <input type="text" id="locationInput" placeholder="Enter city or suburb...">
+        <button id="searchLocation">Search</button>
+      </div>
+      
+      <button id="autoDetect" class="secondary full-width">
+        Use My Current Location
+      </button>
+      
+      <div id="message"></div>
+      
+      <div id="currentLocation" class="current-location" style="display: none;">
+        Monitoring: <span id="locationText">Not set</span>
+      </div>
+      
+      <div class="info">
+        <strong>Search any Australian location:</strong> Cities, suburbs, towns, postcodes - anywhere in Australia!
+      </div>
+    </div>
+    
+    <button id="checkNow" class="full-width">Check for Warnings Now</button>
+    <button id="viewBOM" class="secondary full-width">View BOM Website</button>
+  </div>
+  
+  <div class="footer">
+    Last checked: <span id="lastCheck">Never</span>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
