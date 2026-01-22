@@ -11,6 +11,23 @@ const messageDiv = document.getElementById('message');
 const currentLocationDiv = document.getElementById('currentLocation');
 const locationText = document.getElementById('locationText');
 const warningsContainer = document.getElementById('warningsContainer');
+const notificationBanner = document.getElementById('notificationBanner');
+
+// Show notification banner at top of popup
+function showNotification(message, type = 'success', duration = 8000) {
+  if (!notificationBanner) {
+    return;
+  }
+  
+  notificationBanner.textContent = message;
+  notificationBanner.className = `notification-banner show ${type}`;
+  
+  if (duration > 0) {
+    setTimeout(() => {
+      notificationBanner.classList.remove('show');
+    }, duration);
+  }
+}
 
 // Search location by name using Nominatim geocoding API
 async function searchLocationByName(query) {
@@ -339,3 +356,17 @@ updateStatus();
 
 // Auto-refresh every 30 seconds
 setInterval(updateStatus, 30000);
+
+// Listen for warning alerts from background service worker
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'warningAlert') {
+    const warning = request.warning;
+    const locationName = request.locationName;
+    showNotification(
+      `🚨 ${warning.type}: ${warning.title.substring(0, 50)}...`,
+      'warning',
+      6000
+    );
+    updateStatus(); // Refresh to show new warning
+  }
+});

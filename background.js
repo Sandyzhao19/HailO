@@ -343,11 +343,8 @@ function shouldNotify(warning) {
 }
 
 async function checkWeatherAlerts() {
-  const debugLog = [];
-  
   function log(message) {
     console.log(message);
-    debugLog.push(message);
   }
   
   try {
@@ -363,8 +360,7 @@ async function checkWeatherAlerts() {
       await chrome.storage.local.set({
         lastCheck: new Date().toISOString(),
         alertCount: 0,
-        warnings: [],
-        debugLog: debugLog
+        warnings: []
       });
       return;
     }
@@ -420,39 +416,60 @@ async function checkWeatherAlerts() {
       if (!lastAlerts.has(alertId) && shouldNotify(warning)) {
         log(`🔔 SENDING NOTIFICATION: ${warning.title}`);
         
-        // Create a more detailed notification message
-        const warningAreas = warning.description ? warning.description : '';
-        const notificationMessage = warningAreas 
-          ? `${warning.type} for ${locationName || state}\n\n${warningAreas.substring(0, 150)}...`
-          : `${warning.type} warning active for ${locationName || state}`;
+        const notificationId = String(Date.now()); // Use timestamp for unique ID
         
-        await chrome.notifications.create(String(alertId), {
+        // Create simplified browser notification for better macOS compatibility
+        chrome.notifications.create(notificationId, {
           type: 'basic',
           iconUrl: 'icon128.png',
-          title: `Weather Alert: ${locationName || state}`,
+          title: '⚠️ Weather Alert',
           message: warning.title,
-          contextMessage: warning.severity === 'Severe' ? 'SEVERE WARNING' : warning.type,
-          priority: warning.severity === 'Severe' ? 2 : 1,
-          requireInteraction: warning.severity === 'Severe',
-          buttons: [{ title: 'View Warning Details' }],
-          silent: false
+          priority: 2,
+          requireInteraction: true
+        }, (createdId) => {
+          if (chrome.runtime.lastError) {
+            log(`⚠️ Notification creation issue: ${chrome.runtime.lastError.message}`);
+          } else {
+            log(`✅ Browser notification created: ${createdId}`);
+          }
+        });
+        
+        // Also notify popup if it's open
+        chrome.runtime.sendMessage({
+          action: 'warningAlert',
+          warning: warning,
+          locationName: locationName,
+          state: state
+        }).catch(err => {
+          // Popup might not be open, that's fine
+          log(`ℹ️ Popup not open to receive notification`);
         });
         
         await chrome.storage.local.set({
-          [`warning_${alertId}`]: warning
+          [`warning_${notificationId}`]: warning
         });
       }
     }
     
     lastAlerts = currentAlertIds;
     
+    // Update badge on extension icon
+    const warningCount = uniqueWarnings.length;
+    if (warningCount > 0) {
+      chrome.action.setBadgeText({ text: String(warningCount) });
+      chrome.action.setBadgeBackgroundColor({ color: '#DC2626' }); // Red
+      chrome.action.setTitle({ title: `${warningCount} active warning${warningCount > 1 ? 's' : ''} in ${locationName || state}` });
+    } else {
+      chrome.action.setBadgeText({ text: '' });
+      chrome.action.setTitle({ title: 'Hail-O - No active warnings' });
+    }
+    
     await chrome.storage.local.set({ 
       lastCheck: new Date().toISOString(),
       alertCount: uniqueWarnings.length,
       state: state,
       locationName: locationName,
-      warnings: uniqueWarnings,
-      debugLog: debugLog
+      warnings: uniqueWarnings
     });
     
     log(`✅ Check complete at ${new Date().toLocaleTimeString()}`);
@@ -460,7 +477,6 @@ async function checkWeatherAlerts() {
   } catch (error) {
     log(`❌ Error: ${error}`);
     console.error('❌ Error:', error);
-    await chrome.storage.local.set({ debugLog: debugLog });
   }
 }
 
@@ -474,7 +490,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'checkNow') {
-    console.log('📱 Manual check from popup');
     checkWeatherAlerts().then(() => {
       sendResponse({ success: true });
     });
